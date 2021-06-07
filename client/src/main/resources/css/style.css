@@ -1,0 +1,20 @@
+#window{
+    -fx-background-color: #d93d4c;
+
+}
+#clientWindow, #serverWindow{
+    -fx-font-size: 15px;
+    -fx-background-color: #cce0ff;
+    -fx-padding: 0;
+}
+
+#clientWindow HBox, #serverWindow HBox {
+    -fx-cursor: hand;
+    -fx-pref-height: 18px;
+    -fx-pref-width: 100%;
+    -fx-padding: 5px;
+}
+
+#selectedFile{
+    -fx-background-color: #2b60c1;
+}

@@ -1,0 +1,29 @@
+<?import javafx.scene.layout.AnchorPane?>
+<?import java.net.URL?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.Label?>
+<AnchorPane fx:controller="ru.fomin.RegController"
+            xmlns:fx="http://javafx.com/fxml">
+
+    <stylesheets>
+        <URL value="@/css/style.css"/>
+    </stylesheets>
+
+    <VBox AnchorPane.leftAnchor="50" AnchorPane.rightAnchor="50" AnchorPane.bottomAnchor="50" AnchorPane.topAnchor="50">
+
+        <VBox spacing="10" fx:id="btnPanel" visible="true">
+            <TextField promptText="Логин" fx:id="loginFiled"/>
+            <PasswordField promptText="Пароль" fx:id="passwordFiled"/>
+            <PasswordField promptText="Повторите пароль" fx:id="repeatFiled"/>
+            <Button text="Регистрация" fx:id="regBtn" onAction="#registration"/>
+            <Label fx:id="message"/>
+        </VBox>
+
+    </VBox>
+
+</AnchorPane>

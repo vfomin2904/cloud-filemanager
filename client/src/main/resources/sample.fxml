@@ -1,0 +1,84 @@
+<?import javafx.scene.layout.AnchorPane?>
+<?import java.net.URL?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ListCell?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
+<?import javafx.collections.FXCollections?>
+<?import java.lang.String?>
+<AnchorPane fx:id="anchor" fx:controller="ru.fomin.Controller"
+            xmlns:fx="http://javafx.com/fxml">
+
+    <stylesheets>
+        <URL value="@/css/style.css"/>
+    </stylesheets>
+
+    <VBox AnchorPane.topAnchor="80" prefHeight="${anchor.height}" alignment="BASELINE_CENTER"
+          spacing="20" prefWidth="${anchor.width}" fx:id="loginWindow">
+        <TextField maxWidth="200" promptText="Логин" fx:id="loginField"/>
+        <PasswordField maxWidth="200" promptText="Пароль" fx:id="passwordField"/>
+        <Button prefWidth="200" text="Авторизация" onAction="#login"/>
+        <Button prefWidth="200" text="Регистрация" onAction="#regOpen" fx:id="regBtn"/>
+        <Label fx:id="message"/>
+    </VBox>
+    <VBox spacing="10" visible="false" fx:id="mainWindow" AnchorPane.leftAnchor="50"
+          AnchorPane.rightAnchor="50"
+          AnchorPane.bottomAnchor="50" AnchorPane.topAnchor="20">
+
+        <HBox fx:id="sortBox">
+            <Label text="Сортировка: "/>
+            <ComboBox fx:id="sortType" onAction="#changeSort">
+                <items>
+                    <FXCollections fx:factory="observableArrayList">
+                        <String fx:value="по возрастанию имени"/>
+                        <String fx:value="по возрастанию размера"/>
+                        <String fx:value="по возрастанию даты изменения"/>
+                        <String fx:value="по убыванию имени"/>
+                        <String fx:value="по убыванию размера"/>
+                        <String fx:value="по убыванию даты изменения"/>
+                    </FXCollections>
+                </items>
+                <value>
+                    <String fx:value="по возрастанию имени"/>
+                </value>
+            </ComboBox>
+        </HBox>
+
+        <HBox prefWidth="${mainWindow.width}">
+            <Label prefWidth="${scroll1.width}" HBox.hgrow="ALWAYS" text="Клиент"/>
+            <Label prefWidth="${scroll2.width}" HBox.hgrow="ALWAYS" text="Сервер"/>
+        </HBox>
+
+        <HBox prefHeight="600" fx:id="fileArea" spacing="0">
+            <ScrollPane hbarPolicy="NEVER" fx:id="scroll1" HBox.hgrow="ALWAYS">
+                <VBox fx:id="clientWindow" prefWidth="${scroll1.width}">
+                </VBox>
+            </ScrollPane>
+            <ScrollPane fx:id="scroll2" hbarPolicy="NEVER" HBox.hgrow="ALWAYS">
+                <VBox fx:id="serverWindow" prefWidth="${scroll2.width}">
+                </VBox>
+            </ScrollPane>
+        </HBox>
+
+        <VBox fx:id="btnPanel" visible="false" spacing="5">
+            <HBox spacing="5">
+                <Button text="Загрузить" managed="false" fx:id="uploadBtn" onAction="#sendFile" visible="false"/>
+                <Button text="Скачать" managed="false" fx:id="downloadBtn" onAction="#getFile" visible="false"/>
+                <Button text="Удалить" fx:id="removeBtn" onAction="#removeFile"/>
+            </HBox>
+            <HBox spacing="5">
+                <TextField fx:id="renameField" prefWidth="100"/>
+                <Button fx:id="renameButton" onAction="#rename" text="Переименовать"/>
+            </HBox>
+        </VBox>
+
+    </VBox>
+
+</AnchorPane>
