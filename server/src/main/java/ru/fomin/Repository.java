@@ -1,13 +1,23 @@
 package ru.fomin;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.sql.*;
+import java.util.Properties;
 
 public class Repository {
     final Connection connect;
     static Repository repository;
+    private Properties properties;
 
     private Repository() throws SQLException {
-        connect = DriverManager.getConnection("jdbc:mysql://localhost:3306/filemanager?currentSchema=filemanager", "root", "root");
+        properties = new Properties();
+        try {
+            properties.load(new FileInputStream(getClass().getClassLoader().getResource("properties/jdbc.properties").getFile()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        connect = DriverManager.getConnection(properties.getProperty("jdbc.url"), properties.getProperty("jdbc.username"), properties.getProperty("jdbc.password"));
     }
 
     /**
