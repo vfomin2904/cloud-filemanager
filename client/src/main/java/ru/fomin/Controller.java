@@ -126,6 +126,137 @@ public class Controller implements Initializable {
             return;
         }
 
+        List<File> filesList = getFilesForDraw(files, client);
+
+        for (File file : filesList) {
+            final HBox fileBox = new HBox();
+            ImageView icon;
+            if (file.isFile() && !file.toString().equals("..")) {
+                icon = new ImageView("/images/file.png");
+            } else {
+                icon = new ImageView("/images/folder.png");
+            }
+
+            icon.setFitWidth(15.0);
+            icon.setFitHeight(15.0);
+
+            addActionListener(fileBox, client, file);
+
+            Text name = new Text(file.getName());
+            long length = 0;
+            try {
+                length = getSize(file, client);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Text size = new Text(file.getName().equals("..")?"":" "+String.format("%.2f",(double)(length/1024))+"kB");
+            Text lastMod = new Text(file.getName().equals("..")?"":" "+new SimpleDateFormat("y-M-d H:m:s").format(new Date(file.lastModified())));
+            lastMod.setStyle("-fx-font-size: 11px;");
+            size.setStyle("-fx-font-size: 11px; -fx-pref-height: 15px;");
+            name.setId(file.isFile() ? "file" : "folder");
+            fileBox.getChildren().addAll(icon, name, size, lastMod);
+            window.getChildren().add(fileBox);
+        }
+        ImageView iconFolderAdd = new ImageView("/images/add_folder.png");
+        iconFolderAdd.setFitWidth(15.0);
+        iconFolderAdd.setFitHeight(15.0);
+
+        HBox addFolderHBox = new HBox();
+        TextField folderNameField = new TextField();
+        folderNameField.setStyle("-fx-padding: 0px; -fx-pref-height: 12px; -fx-font-size: 12px");
+
+        iconFolderAdd.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent mouseEvent) {
+                addDirectory(folderNameField.getText(), client);
+            }
+        });
+
+        folderNameField.setOnAction(event -> {
+            addDirectory(folderNameField.getText(), client);
+        });
+
+        addFolderHBox.getChildren().addAll(iconFolderAdd, folderNameField);
+        window.getChildren().add(addFolderHBox);
+    }
+
+    /**
+     * Отслеживание события клика по файлам и папкам
+     * @param fileBox строка с названием файла
+     * @param client true - на компьютере пользователя, false - на сервере
+     * @param file файл
+     */
+    private void addActionListener(HBox fileBox, boolean client, File file){
+        fileBox.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent mouseEvent) {
+                if (fileBox.getId() == null) {
+                    HashSet<Node> nodes = new HashSet<>();
+                    nodes.addAll(clientWindow.getChildren());
+                    nodes.addAll(serverWindow.getChildren());
+                    for (Node node : nodes) {
+                        if (node.getId() != null && node.getId().equals("selectedFile")) {
+                            node.setId(null);
+                        }
+                    }
+                    if(!"..".equals(file.getName())) {
+                        if (client) {
+                            uploadBtn.setVisible(true);
+                            uploadBtn.setManaged(true);
+                            downloadBtn.setVisible(false);
+                            downloadBtn.setManaged(false);
+                            clientWindowFocused = true;
+                        } else {
+                            uploadBtn.setVisible(false);
+                            uploadBtn.setManaged(false);
+                            downloadBtn.setVisible(true);
+                            downloadBtn.setManaged(true);
+                            clientWindowFocused = false;
+                        }
+                        btnPanel.setVisible(true);
+                    } else{
+                        btnPanel.setVisible(false);
+                    }
+                    fileBox.setId("selectedFile");
+                } else {
+                    Text folder = (Text) fileBox.lookup("#folder");
+                    if (folder != null) {
+                        if (client) {
+                            if (folder.getText().equals("..")) {
+                                clientFiles = new File(clientFiles.getParent());
+                            } else {
+                                clientFiles = new File(clientFiles.toString() + File.separator + folder.getText() + File.separator);
+                            }
+                            getClientFileList();
+                            btnPanel.setVisible(false);
+                        } else {
+                            try {
+                                out.write(("open " + folder.getText()).getBytes(StandardCharsets.UTF_8));
+                                byte[] response = new byte[100];
+                                in.read(response);
+                                System.out.println(new String(response));
+                                getServerFileList();
+                                btnPanel.setVisible(false);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    } else {
+                        fileBox.setId(null);
+                        btnPanel.setVisible(false);
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Формирует список файлов для отрисовки согласно сортировке
+     * @param files список файлов
+     * @param client true - на компьютере пользователя, false - на сервере
+     * @return отсортированный список файлов
+     */
+    private List<File> getFilesForDraw(File[] files, boolean client){
         List<File> filesList = new ArrayList<>();
         filesList.addAll(Arrays.asList(files));
 
@@ -171,118 +302,7 @@ public class Controller implements Initializable {
                     }
                 }
             }});
-
-        for (File file : filesList) {
-            final HBox fileBox = new HBox();
-            ImageView icon;
-            if (file.isFile() && !file.toString().equals("..")) {
-                icon = new ImageView("/images/file.png");
-            } else {
-                icon = new ImageView("/images/folder.png");
-            }
-
-            icon.setFitWidth(15.0);
-            icon.setFitHeight(15.0);
-
-
-            fileBox.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-                @Override
-                public void handle(MouseEvent mouseEvent) {
-                    if (fileBox.getId() == null) {
-                        HashSet<Node> nodes = new HashSet<>();
-                        nodes.addAll(clientWindow.getChildren());
-                        nodes.addAll(serverWindow.getChildren());
-                        for (Node node : nodes) {
-                            if (node.getId() != null && node.getId().equals("selectedFile")) {
-                                node.setId(null);
-                            }
-                        }
-                        if(!"..".equals(file.getName())) {
-                            if (client) {
-                                uploadBtn.setVisible(true);
-                                uploadBtn.setManaged(true);
-                                downloadBtn.setVisible(false);
-                                downloadBtn.setManaged(false);
-                                clientWindowFocused = true;
-                            } else {
-                                uploadBtn.setVisible(false);
-                                uploadBtn.setManaged(false);
-                                downloadBtn.setVisible(true);
-                                downloadBtn.setManaged(true);
-                                clientWindowFocused = false;
-                            }
-                            btnPanel.setVisible(true);
-                        } else{
-                            btnPanel.setVisible(false);
-                        }
-                        fileBox.setId("selectedFile");
-                    } else {
-                        Text folder = (Text) fileBox.lookup("#folder");
-                        if (folder != null) {
-                            if (client) {
-                                if (folder.getText().equals("..")) {
-                                    clientFiles = new File(clientFiles.getParent());
-                                } else {
-                                    clientFiles = new File(clientFiles.toString() + File.separator + folder.getText() + File.separator);
-                                }
-                                getClientFileList();
-                                btnPanel.setVisible(false);
-                            } else {
-                                try {
-                                    out.write(("open " + folder.getText()).getBytes(StandardCharsets.UTF_8));
-                                    byte[] response = new byte[100];
-                                    in.read(response);
-                                    System.out.println(new String(response));
-                                    getServerFileList();
-                                    btnPanel.setVisible(false);
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        } else {
-                            fileBox.setId(null);
-                            btnPanel.setVisible(false);
-                        }
-                    }
-                }
-            });
-
-            Text name = new Text(file.getName());
-            long length = 0;
-            try {
-                length = getSize(file, client);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            Text size = new Text(file.getName().equals("..")?"":" "+String.format("%.2f",(double)(length/1024))+"kB");
-            Text lastMod = new Text(file.getName().equals("..")?"":" "+new SimpleDateFormat("y-M-d H:m:s").format(new Date(file.lastModified())));
-            lastMod.setStyle("-fx-font-size: 11px;");
-            size.setStyle("-fx-font-size: 11px; -fx-pref-height: 15px;");
-            name.setId(file.isFile() ? "file" : "folder");
-            fileBox.getChildren().addAll(icon, name, size, lastMod);
-            window.getChildren().add(fileBox);
-        }
-        ImageView iconFolderAdd = new ImageView("/images/add_folder.png");
-        iconFolderAdd.setFitWidth(15.0);
-        iconFolderAdd.setFitHeight(15.0);
-
-        HBox addFolderHBox = new HBox();
-        TextField folderNameField = new TextField();
-        folderNameField.setStyle("-fx-padding: 0px; -fx-pref-height: 12px; -fx-font-size: 12px");
-
-        iconFolderAdd.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent mouseEvent) {
-                addDirectory(folderNameField.getText(), client);
-            }
-        });
-
-        folderNameField.setOnAction(event -> {
-            addDirectory(folderNameField.getText(), client);
-        });
-
-        addFolderHBox.getChildren().addAll(iconFolderAdd, folderNameField);
-        window.getChildren().add(addFolderHBox);
+        return filesList;
     }
 
     /**
